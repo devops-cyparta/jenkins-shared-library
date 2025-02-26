@@ -96,7 +96,11 @@ def call() {
                 steps {
                     script {
                         sh """
-                        ls -dt \"${STORAGE_PATH}/../*/\" | tail -n +6 | xargs -r rm -rf
+                        if ls -d "${STORAGE_PATH}/../"*/ 1>/dev/null 2>&1; then
+                            ls -dt "${STORAGE_PATH}/../"*/ | tail -n +6 | xargs -r rm -rf
+                        else
+                            echo "No old builds to clean up."
+                        fi
                         """
                     }
                 }
