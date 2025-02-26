@@ -4,11 +4,11 @@ def call() {
 
         environment {
             REPO_NAME = "${sh(script: 'basename -s .git $(git config --get remote.origin.url)', returnStdout: true).trim()}"
-            BRANCH_NAME = "${env.BRANCH_NAME}"
+            BRANCH_NAME = "${env.BRANCH_NAME}".replaceAll("/", "-")
             USER_NAME = "${sh(script: 'git log --format=%an -n 1', returnStdout: true).trim()}"
             BUILD_NUM = "${env.BUILD_NUMBER}"
             STORAGE_PATH = "/mnt/Storage/${USER_NAME}/${REPO_NAME}/${BRANCH_NAME}"
-            IMAGE_NAME = "${REPO_NAME}:${BUILD_NUM}"
+            IMAGE_NAME = "${REPO_NAME}-${BRANCH_NAME}:${BUILD_NUM}"
             LATEST_IMAGE = "${REPO_NAME}:latest"
         }
 
