@@ -3,7 +3,7 @@ def call() {
         agent any
 
         environment {
-            REPO_NAME = "${env.JOB_NAME.split('/')[1]}"
+            REPO_NAME = "${sh(script: 'basename -s .git $(git config --get remote.origin.url)', returnStdout: true).trim()}"
             BRANCH_NAME = "${env.BRANCH_NAME}"
             USER_NAME = "${sh(script: 'git log --format=%an -n 1', returnStdout: true).trim()}"
             BUILD_NUM = "${env.BUILD_NUMBER}"
