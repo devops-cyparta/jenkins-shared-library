@@ -41,12 +41,19 @@ def call() {
                 steps {
                     script {
                         sh """
-                        sudo docker ps -a --filter "name=${REPO_NAME}" --format "{{.ID}}" | xargs -r sudo docker stop
-                        sudo docker ps -a --filter "name=${REPO_NAME}" --format "{{.ID}}" | xargs -r sudo docker rm
+                        # Stop containers gracefully
+                        sudo docker ps -a --filter "name=${REPO_NAME}-${BRANCH_NAME}" --format "{{.ID}}" | xargs -r sudo docker stop
+            
+                        # Wait a moment to ensure all containers are fully stopped
+                        sleep 5
+            
+                        # Ensure all stopped containers are removed
+                        sudo docker ps -a --filter "name=${REPO_NAME}-${BRANCH_NAME}" --format "{{.ID}}" | xargs -r sudo docker rm || true
                         """
                     }
                 }
             }
+
 
             stage('Run New Container') {
                 steps {
