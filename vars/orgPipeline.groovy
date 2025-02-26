@@ -69,7 +69,7 @@ def call() {
                 steps {
                     script {
                         sh """
-                        IMAGES_TO_DELETE=$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
+                        IMAGES_TO_DELETE=$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \\$2}' | sort -nr | tail -n +3)
                         if [ -n "$IMAGES_TO_DELETE" ]; then
                             echo "$IMAGES_TO_DELETE" | xargs -r -I {} sudo docker rmi -f "${REPO_NAME}:{}"
                         else
