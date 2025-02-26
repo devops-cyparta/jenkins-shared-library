@@ -29,8 +29,8 @@ def call() {
                     script {
                         echo "Building Docker image: ${IMAGE_NAME}"
                         sh """
-                        cd "${STORAGE_PATH}" && sudo docker build -t "${REPO_NAME}:${BUILD_NUM}" .
-                        sudo docker tag "${REPO_NAME}:${BUILD_NUM}" "${REPO_NAME}:latest"
+                        cd "${STORAGE_PATH}" && sudo docker build -t "${IMAGE_NAME}" .
+                        sudo docker tag "${IMAGE_NAME}" "${LATEST_IMAGE}"
                         """
                     }
                 }
@@ -53,11 +53,11 @@ def call() {
                     script {
                         def port = sh(script: "shuf -i 2000-65000 -n 1", returnStdout: true).trim()
                         try {
-                            sh "sudo docker run -d -p \"${port}:80\" --name \"${REPO_NAME}\" \"${IMAGE_NAME}\""
+                            sh "sudo docker run -d -p \"${port}:80\" --name \"${REPO_NAME}-${BRANCH_NAME}\" \"${IMAGE_NAME}\""
                             echo "Running on port ${port}"
                         } catch (Exception e) {
                             echo "Deployment failed, rolling back to previous version..."
-                            sh "sudo docker run -d -p \"${port}:80\" --name \"rollback-${REPO_NAME}\" \"${LATEST_IMAGE}\""
+                            sh "sudo docker run -d -p \"${port}:80\" --name \"rollback-${REPO_NAME}-${BRANCH_NAME}\" \"${LATEST_IMAGE}\""
                         }
                     }
                 }
