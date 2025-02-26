@@ -63,7 +63,7 @@ def call() {
                 steps {
                     script {
                         sh """
-                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print $2}' | sort -nr | tail -n +3 | xargs -r -I {} sudo docker rmi -f "${REPO_NAME}:{}"
+                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3 | xargs -r -I {} sudo docker rmi -f "${REPO_NAME}:{}"
                         """
                     }
                 }
