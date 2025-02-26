@@ -3,6 +3,7 @@ def call() {
         agent any
 
         environment {
+            GITHUB_ORG = "${env.GITHUB_ORG ?: 'default_org'}"
             REPO_NAME = "${env.JOB_NAME.split('/')[1]}"
             BRANCH_NAME = "${env.BRANCH_NAME}"
             USER_NAME = "${sh(script: 'git log --format=%an -n 1', returnStdout: true).trim()}"
