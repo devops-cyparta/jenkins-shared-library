@@ -1,9 +1,6 @@
 def call() {
     pipeline {
-        agent {
-            label 'any'  // Runs on any available agent
-            customWorkspace "/mnt/Storage/workspaces/${REPO_NAME}/${BRANCH_NAME}"
-        }
+        agent any
 
         environment {
             REPO_NAME = "${sh(script: 'basename -s .git $(git config --get remote.origin.url)', returnStdout: true).trim()}"
