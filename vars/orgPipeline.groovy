@@ -101,7 +101,7 @@ def call() {
                             ls -dt "${STORAGE_PATH}/../"*/
             
                             echo "Deleting the following old builds:"
-                            ls -dt "${STORAGE_PATH}/../"*/ | tail -n +6 | tee /tmp/deleted_builds.txt | xargs -r rm -rf
+                            ls -dt "${STORAGE_PATH}/../"*/ | tail -n +4 | tee /tmp/deleted_builds.txt | xargs -r rm -rf
             
                             echo "Deleted builds:"
                             cat /tmp/deleted_builds.txt
