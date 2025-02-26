@@ -70,15 +70,18 @@ def call() {
                         sh "sudo docker images"
             
                         sh """
-                        echo "Finding images for ${REPO_NAME}"
-                        IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
+                        echo "Finding old images for ${REPO_NAME}"
+            
+                        # Get a list of tags to delete (all except the latest 2)
+                        IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "^${REPO_NAME}:" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
             
                         for tag in \$IMAGE_LIST; do
-                            if sudo docker images "${REPO_NAME}:${tag}" | grep -q "${REPO_NAME}"; then
-                                echo "Deleting ${REPO_NAME}:${tag}..."
-                                sudo docker rmi -f "${REPO_NAME}:${tag}"
+                            IMAGE="${REPO_NAME}:\$tag"
+                            if sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "\$IMAGE"; then
+                                echo "Deleting \$IMAGE..."
+                                sudo docker rmi -f "\$IMAGE"
                             else
-                                echo "Image ${REPO_NAME}:${tag} not found, skipping..."
+                                echo "Skipping non-existing image \$IMAGE"
                             fi
                         done
                         """
@@ -88,6 +91,7 @@ def call() {
                     }
                 }
             }
+
             stage('Cleanup Old Builds') {
                 steps {
                     script {
