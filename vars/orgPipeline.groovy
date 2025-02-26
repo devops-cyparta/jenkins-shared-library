@@ -3,11 +3,12 @@ def call() {
         agent any
 
         environment {
+            GITHUB_ORG = "devops-cyparta"  // Ensure org is set
             REPO_NAME = "${env.JOB_NAME.split('/')[1]}"
             BRANCH_NAME = "${env.BRANCH_NAME}"
             USER_NAME = "${sh(script: 'git log --format=%an -n 1', returnStdout: true).trim()}"
             BUILD_NUM = "${env.BUILD_NUMBER}"
-            STORAGE_PATH = "/mnt/Storage/${env.GITHUB_ORG}/${USER_NAME}/${REPO_NAME}/${BRANCH_NAME}"
+            STORAGE_PATH = "/mnt/Storage/${GITHUB_ORG}/${USER_NAME}/${REPO_NAME}/${BRANCH_NAME}"
             IMAGE_NAME = "${REPO_NAME}:${BUILD_NUM}"
             LATEST_IMAGE = "${REPO_NAME}:latest"
         }
@@ -27,22 +28,23 @@ def call() {
             stage('Build Docker Image') {
                 steps {
                     script {
-                        echo "Building Docker image: ${IMAGE_NAME}"
-                        sh """
-                        cd "${STORAGE_PATH}" && sudo docker build -t "${REPO_NAME}:${BUILD_NUM}" .
-                        sudo docker tag "${REPO_NAME}:${BUILD_NUM}" "${REPO_NAME}:latest"
-                        """
+                        sh "cd \"${STORAGE_PATH}\" && sudo docker build -t \"${IMAGE_NAME}\" ."
+                        sh "sudo docker tag \"${IMAGE_NAME}\" \"${LATEST_IMAGE}\""
                     }
                 }
             }
-
 
             stage('Stop & Remove Old Containers') {
                 steps {
                     script {
                         sh """
-                        sudo docker ps -a --filter "name=${REPO_NAME}" --format "{{.ID}}" | xargs -r sudo docker stop
-                        sudo docker ps -a --filter "name=${REPO_NAME}" --format "{{.ID}}" | xargs -r sudo docker rm
+                        CONTAINERS=\$(sudo docker ps -a --filter "name=${REPO_NAME}" --format "{{.ID}}")
+                        if [ -n "$CONTAINERS" ]; then
+                            echo "$CONTAINERS" | xargs -r sudo docker stop
+                            echo "$CONTAINERS" | xargs -r sudo docker rm
+                        else
+                            echo "No old containers to remove."
+                        fi
                         """
                     }
                 }
@@ -57,7 +59,7 @@ def call() {
                             echo "Running on port ${port}"
                         } catch (Exception e) {
                             echo "Deployment failed, rolling back to previous version..."
-                            sh "sudo docker run -d -p \"${port}:80\" --name \"rollback-${REPO_NAME}\" \"${LATEST_IMAGE}\""
+                            sh "if sudo docker inspect ${LATEST_IMAGE} &>/dev/null; then sudo docker run -d -p \"${port}:80\" --name \"rollback-${REPO_NAME}\" \"${LATEST_IMAGE}\"; else echo 'No previous version available'; fi"
                         }
                     }
                 }
@@ -66,28 +68,14 @@ def call() {
             stage('Cleanup Old Images') {
                 steps {
                     script {
-                        echo "Listing all images before cleanup:"
-                        sh "sudo docker images"
-            
                         sh """
-                        echo "Finding old images for ${REPO_NAME}"
-            
-                        # Get a list of tags to delete (all except the latest 2)
-                        IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "^${REPO_NAME}:" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
-            
-                        for tag in \$IMAGE_LIST; do
-                            IMAGE="${REPO_NAME}:\$tag"
-                            if sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "\$IMAGE"; then
-                                echo "Deleting \$IMAGE..."
-                                sudo docker rmi -f "\$IMAGE"
-                            else
-                                echo "Skipping non-existing image \$IMAGE"
-                            fi
-                        done
+                        IMAGES_TO_DELETE=$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print $2}' | sort -nr | tail -n +3)
+                        if [ -n "$IMAGES_TO_DELETE" ]; then
+                            echo "$IMAGES_TO_DELETE" | xargs -r -I {} sudo docker rmi -f "${REPO_NAME}:{}"
+                        else
+                            echo "No old images to remove."
+                        fi
                         """
-            
-                        echo "Listing all images after cleanup:"
-                        sh "sudo docker images"
                     }
                 }
             }
@@ -96,7 +84,12 @@ def call() {
                 steps {
                     script {
                         sh """
-                        ls -dt \"${STORAGE_PATH}/../*/\" | tail -n +6 | xargs -r rm -rf
+                        OLD_BUILDS=$(ls -dt "${STORAGE_PATH}/../*/" 2>/dev/null | tail -n +6)
+                        if [ -n "$OLD_BUILDS" ]; then
+                            echo "$OLD_BUILDS" | xargs -r rm -rf
+                        else
+                            echo "No old builds to clean."
+                        fi
                         """
                     }
                 }
@@ -112,4 +105,3 @@ def call() {
         }
     }
 }
-
