@@ -66,10 +66,13 @@ def call() {
             stage('Cleanup Old Images') {
                 steps {
                     script {
+                        echo "Listing all images before cleanup:"
+                        sh "sudo docker images"
+            
                         sh """
                         echo "Finding images for ${REPO_NAME}"
                         IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
-                        
+            
                         for tag in \$IMAGE_LIST; do
                             if sudo docker images "${REPO_NAME}:${tag}" | grep -q "${REPO_NAME}"; then
                                 echo "Deleting ${REPO_NAME}:${tag}..."
@@ -79,6 +82,9 @@ def call() {
                             fi
                         done
                         """
+            
+                        echo "Listing all images after cleanup:"
+                        sh "sudo docker images"
                     }
                 }
             }
