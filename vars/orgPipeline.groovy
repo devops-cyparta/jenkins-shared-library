@@ -1,8 +1,8 @@
 def call() {
     pipeline {
         agent {
-        label 'any'  // Runs on any available agent
-        customWorkspace "/mnt/Storage/workspaces/${REPO_NAME}/${BRANCH_NAME}"
+            label 'any'  // Runs on any available agent
+            customWorkspace "/mnt/Storage/workspaces/${REPO_NAME}/${BRANCH_NAME}"
         }
 
         environment {
