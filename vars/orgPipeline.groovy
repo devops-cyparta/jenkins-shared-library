@@ -67,17 +67,15 @@ def call() {
                 steps {
                     script {
                         sh """
-                        echo "Listing all images for repository: ${REPO_NAME}"
-                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}"
-            
-                        echo "Selecting images to delete..."
-                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3 | while read tag; do
-                            echo "Checking if ${REPO_NAME}:${tag} exists..."
+                        echo "Finding images for ${REPO_NAME}"
+                        IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
+                        
+                        for tag in \$IMAGE_LIST; do
                             if sudo docker images "${REPO_NAME}:${tag}" | grep -q "${REPO_NAME}"; then
                                 echo "Deleting ${REPO_NAME}:${tag}..."
                                 sudo docker rmi -f "${REPO_NAME}:${tag}"
                             else
-                                echo "Image ${REPO_NAME}:${tag} does not exist, skipping..."
+                                echo "Image ${REPO_NAME}:${tag} not found, skipping..."
                             fi
                         done
                         """
