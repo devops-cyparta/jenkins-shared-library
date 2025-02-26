@@ -67,12 +67,17 @@ def call() {
                 steps {
                     script {
                         sh """
-                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3 | xargs -r -I {} sudo docker rmi -f "${REPO_NAME}:{}"
+                        sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REPO_NAME}" | awk -F':' '{print \$2}' | sort -nr | tail -n +3 | while read tag; do
+                            if sudo docker images "${REPO_NAME}:${tag}" | grep -q "${REPO_NAME}"; then
+                                sudo docker rmi -f "${REPO_NAME}:${tag}"
+                            else
+                                echo "Image ${REPO_NAME}:${tag} does not exist, skipping..."
+                            fi
+                        done
                         """
                     }
                 }
             }
-
             stage('Cleanup Old Builds') {
                 steps {
                     script {
