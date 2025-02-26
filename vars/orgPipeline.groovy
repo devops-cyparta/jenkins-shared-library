@@ -3,12 +3,11 @@ def call() {
         agent any
 
         environment {
-            GITHUB_ORG = "${sh(script: 'basename -s .git $(git config --get remote.origin.url) | cut -d"/" -f1', returnStdout: true).trim()}"
             REPO_NAME = "${env.JOB_NAME.split('/')[1]}"
             BRANCH_NAME = "${env.BRANCH_NAME}"
             USER_NAME = "${sh(script: 'git log --format=%an -n 1', returnStdout: true).trim()}"
             BUILD_NUM = "${env.BUILD_NUMBER}"
-            STORAGE_PATH = "/mnt/Storage/${env.GITHUB_ORG}/${USER_NAME}/${REPO_NAME}/${BRANCH_NAME}"
+            STORAGE_PATH = "/mnt/Storage/${USER_NAME}/${REPO_NAME}/${BRANCH_NAME}"
             IMAGE_NAME = "${REPO_NAME}:${BUILD_NUM}"
             LATEST_IMAGE = "${REPO_NAME}:latest"
         }
