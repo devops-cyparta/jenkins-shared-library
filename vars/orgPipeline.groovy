@@ -27,11 +27,15 @@ def call() {
             stage('Build Docker Image') {
                 steps {
                     script {
-                        sh "cd \"${STORAGE_PATH}\" && sudo docker build -t \"${IMAGE_NAME}\" ."
-                        sh "sudo docker tag \"${IMAGE_NAME}\" \"${LATEST_IMAGE}\""
+                        echo "Building Docker image: ${IMAGE_NAME}"
+                        sh """
+                        cd "${STORAGE_PATH}" && sudo docker build -t "${REPO_NAME}:${BUILD_NUM}" .
+                        sudo docker tag "${REPO_NAME}:${BUILD_NUM}" "${REPO_NAME}:latest"
+                        """
                     }
                 }
             }
+
 
             stage('Stop & Remove Old Containers') {
                 steps {
