@@ -97,7 +97,14 @@ def call() {
                     script {
                         sh """
                         if ls -d "${STORAGE_PATH}/../"*/ 1>/dev/null 2>&1; then
-                            ls -dt "${STORAGE_PATH}/../"*/ | tail -n +6 | xargs -r rm -rf
+                            echo "Old builds before cleanup:"
+                            ls -dt "${STORAGE_PATH}/../"*/
+            
+                            echo "Deleting the following old builds:"
+                            ls -dt "${STORAGE_PATH}/../"*/ | tail -n +6 | tee /tmp/deleted_builds.txt | xargs -r rm -rf
+            
+                            echo "Deleted builds:"
+                            cat /tmp/deleted_builds.txt
                         else
                             echo "No old builds to clean up."
                         fi
@@ -105,7 +112,6 @@ def call() {
                     }
                 }
             }
-        }
 
         post {
             always {
