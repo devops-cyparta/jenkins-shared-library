@@ -60,11 +60,11 @@ def call() {
                     script {
                         def port = sh(script: "shuf -i 2000-65000 -n 1", returnStdout: true).trim()
                         try {
-                            sh "sudo docker run -d -p \"${port}:80\" --name \"${REPO_NAME}-${BRANCH_NAME}\" \"${IMAGE_NAME}\""
+                            sh "sudo docker run -d -p \"${port}:8000\" --name \"${REPO_NAME}-${BRANCH_NAME}\" \"${IMAGE_NAME}\""
                             echo "Running on port ${port}"
                         } catch (Exception e) {
                             echo "Deployment failed, rolling back to previous version..."
-                            sh "sudo docker run -d -p \"${port}:80\" --name \"rollback-${REPO_NAME}-${BRANCH_NAME}\" \"${LATEST_IMAGE}\""
+                            sh "sudo docker run -d -p \"${port}:8000\" --name \"rollback-${REPO_NAME}-${BRANCH_NAME}\" \"${LATEST_IMAGE}\""
                         }
                     }
                 }
