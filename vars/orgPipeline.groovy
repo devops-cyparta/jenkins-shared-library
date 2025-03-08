@@ -23,8 +23,7 @@ def call() {
                     }
                 }
             }
-
-            
+  
             stage('Build Docker Image') {
                 steps {
                     script {
@@ -38,7 +37,6 @@ def call() {
                 }
             }
 
-
             stage('Stop & Remove Old Containers') {
                 steps {
                     script {
@@ -49,33 +47,7 @@ def call() {
                     }
                 }
             }
-
-
-            stage('Ensure MySQL Container') {
-                steps {
-                    script {
-                        def mysqlExists = sh(script: "sudo docker ps -a --filter 'name=mysql_db' --format '{{.Names}}'", returnStdout: true).trim()
-                        
-                        if (mysqlExists) {
-                            echo "MySQL container already exists. Restarting..."
-                            sh "sudo docker start mysql_db || true"
-                        } else {
-                            echo "Starting a new MySQL container..."
-                            sh """
-                            sudo docker network create my-network || true
-                            sudo docker run -d --network my-network --name mysql_db \
-                                -e MYSQL_ROOT_PASSWORD=root \
-                                -e MYSQL_DATABASE=mydb \
-                                -e MYSQL_USER=user \
-                                -e MYSQL_PASSWORD=password \
-                                -p 3307:3306 mysql:5.7
-                            """
-                        }
-                    }
-                }
-            }
-
-            
+   
             stage('Run New Container') {
                 steps {
                     script {
