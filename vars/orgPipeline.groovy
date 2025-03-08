@@ -82,7 +82,7 @@ def call() {
                         sh """
                         cd "${STORAGE_PATH}" 
                         export APP_PORT=${port}
-                        sudo docker-compose up -d --build
+                        sudo docker compose up -d --build
                         """
                             echo "Running on port ${port}, connected to MySQL"
                     }
