@@ -56,8 +56,11 @@ def call() {
                     script {
                         def mysqlExists = sh(script: "sudo docker ps -a --filter 'name=mysql_db' --format '{{.Names}}'", returnStdout: true).trim()
                         
-                        if (!mysqlExists) {
-                            echo "Starting MySQL container..."
+                        if (mysqlExists) {
+                            echo "MySQL container already exists. Restarting..."
+                            sh "sudo docker start mysql_db || true"
+                        } else {
+                            echo "Starting a new MySQL container..."
                             sh """
                             sudo docker network create my-network || true
                             sudo docker run -d --network my-network --name mysql_db \
@@ -67,8 +70,6 @@ def call() {
                                 -e MYSQL_PASSWORD=password \
                                 -p 3307:3306 mysql:5.7
                             """
-                        } else {
-                            echo "MySQL container already running."
                         }
                     }
                 }
