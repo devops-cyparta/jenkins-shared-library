@@ -69,7 +69,7 @@ def call() {
                                 -e MYSQL_DATABASE=mydb \
                                 -e MYSQL_USER=user \
                                 -e MYSQL_PASSWORD=password \
-                                -p 3306:3306 mysql:5.7
+                                -p 3307:3306 mysql:5.7
                             """
                         } else {
                             echo "MySQL container already running."
