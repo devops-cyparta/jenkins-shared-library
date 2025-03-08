@@ -55,16 +55,48 @@ def call() {
             }
 
 
+            stage('Ensure MySQL Container') {
+                steps {
+                    script {
+                        def mysqlExists = sh(script: "sudo docker ps -a --filter 'name=mysql_db' --format '{{.Names}}'", returnStdout: true).trim()
+                        
+                        if (!mysqlExists) {
+                            echo "Starting MySQL container..."
+                            sh """
+                            sudo docker network create my-network || true
+                            sudo docker run -d --network my-network --name mysql_db \
+                                -e MYSQL_ROOT_PASSWORD=root \
+                                -e MYSQL_DATABASE=mydb \
+                                -e MYSQL_USER=user \
+                                -e MYSQL_PASSWORD=password \
+                                -p 3306:3306 mysql:5.7
+                            """
+                        } else {
+                            echo "MySQL container already running."
+                        }
+                    }
+                }
+            }
+
+            
             stage('Run New Container') {
                 steps {
                     script {
                         def port = sh(script: "shuf -i 2000-65000 -n 1", returnStdout: true).trim()
                         try {
-                            sh "sudo docker run -d -p \"${port}:8000\" --name \"${REPO_NAME}-${BRANCH_NAME}\" \"${IMAGE_NAME}\""
-                            echo "Running on port ${port}"
+                            sh """
+                            sudo docker run -d -p "${port}:8000" --name "${REPO_NAME}-${BRANCH_NAME}" --network my-network \
+                                -e DB_HOST=mysql_db -e DB_USER=user -e DB_PASSWORD=password -e DB_NAME=mydb \
+                                "${IMAGE_NAME}"
+                            """
+                            echo "Running on port ${port}, connected to MySQL"
                         } catch (Exception e) {
                             echo "Deployment failed, rolling back to previous version..."
-                            sh "sudo docker run -d -p \"${port}:8000\" --name \"rollback-${REPO_NAME}-${BRANCH_NAME}\" \"${LATEST_IMAGE}\""
+                            sh """
+                            sudo docker run -d -p "${port}:8000" --name "rollback-${REPO_NAME}-${BRANCH_NAME}" --network my-network \
+                                -e DB_HOST=mysql_db -e DB_USER=user -e DB_PASSWORD=password -e DB_NAME=mydb \
+                                "${LATEST_IMAGE}"
+                            """
                         }
                     }
                 }
