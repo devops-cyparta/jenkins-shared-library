@@ -24,12 +24,14 @@ def call() {
                 }
             }
 
+            
             stage('Build Docker Image') {
                 steps {
                     script {
                         echo "Building Docker image: ${IMAGE_NAME}"
                         sh """
-                        cd "${STORAGE_PATH}" && sudo docker build -t "${IMAGE_NAME}" .
+                        ls -l ${STORAGE_PATH}/Dockerfile  # Debug: Check if Dockerfile exists
+                        cd "${STORAGE_PATH}" && sudo docker build -f Dockerfile -t "${IMAGE_NAME}" .
                         sudo docker tag "${IMAGE_NAME}" "${LATEST_IMAGE}"
                         """
                     }
