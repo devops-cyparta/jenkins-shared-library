@@ -41,7 +41,7 @@ def call() {
                 steps {
                     script {
                         sh """
-                        sudo docker-compose -f "${STORAGE_PATH}/docker-compose.yml" down || true
+                        sudo docker compose -f "${STORAGE_PATH}/docker-compose.yml" down || true
                         sleep 5
                         """
                     }
