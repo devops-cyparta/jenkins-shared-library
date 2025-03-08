@@ -52,12 +52,13 @@ def call() {
                 steps {
                     script {
                         def port = sh(script: "shuf -i 2000-65000 -n 1", returnStdout: true).trim()
+                        echo "🚀 Assigned port: ${port}"
                         sh """
                         cd "${STORAGE_PATH}" 
                         export APP_PORT=${port}
-                        sudo docker compose up -d --build
+                        sudo APP_PORT=${port} docker compose up -d --build
                         """
-                            echo "Running on port ${port}, connected to MySQL"
+                            echo "✅ Application running at: http://localhost:${port}"
                     }
                 }
             }
