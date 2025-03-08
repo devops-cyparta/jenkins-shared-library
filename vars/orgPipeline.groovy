@@ -43,14 +43,8 @@ def call() {
                 steps {
                     script {
                         sh """
-                        # Stop containers gracefully
-                        sudo docker ps -a --filter "name=${REPO_NAME}-${BRANCH_NAME}" --format "{{.ID}}" | xargs -r sudo docker stop
-            
-                        # Wait a moment to ensure all containers are fully stopped
+                        sudo docker-compose -f "${STORAGE_PATH}/docker-compose.yml" down || true
                         sleep 5
-            
-                        # Ensure all stopped containers are removed
-                        sudo docker ps -a --filter "name=${REPO_NAME}-${BRANCH_NAME}" --format "{{.ID}}" | xargs -r sudo docker rm || true
                         """
                     }
                 }
@@ -98,12 +92,7 @@ def call() {
             stage('Cleanup Old Images') {
                 steps {
                     script {
-                        echo "Listing all images before cleanup:"
-                        sh "sudo docker images"
-            
                         sh """
-                        echo "Finding old images for ${REPO_NAME}"
-            
                         # Get a list of tags to delete (all except the latest 2)
                         IMAGE_LIST=\$(sudo docker images --format "{{.Repository}}:{{.Tag}}" | grep "^${REPO_NAME}:" | awk -F':' '{print \$2}' | sort -nr | tail -n +3)
             
