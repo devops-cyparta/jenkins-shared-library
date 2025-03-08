@@ -85,21 +85,12 @@ def call() {
                 steps {
                     script {
                         def port = sh(script: "shuf -i 2000-65000 -n 1", returnStdout: true).trim()
-                        try {
-                            sh """
-                            sudo docker run -d -p "${port}:8000" --name "${REPO_NAME}-${BRANCH_NAME}" --network my-network \
-                                -e DB_HOST=mysql_db -e DB_USER=user -e DB_PASSWORD=password -e DB_NAME=mydb \
-                                "${IMAGE_NAME}"
-                            """
+                        sh """
+                        cd "${STORAGE_PATH}" 
+                        export APP_PORT=${port}
+                        sudo docker-compose up -d --build
+                        """
                             echo "Running on port ${port}, connected to MySQL"
-                        } catch (Exception e) {
-                            echo "Deployment failed, rolling back to previous version..."
-                            sh """
-                            sudo docker run -d -p "${port}:8000" --name "rollback-${REPO_NAME}-${BRANCH_NAME}" --network my-network \
-                                -e DB_HOST=mysql_db -e DB_USER=user -e DB_PASSWORD=password -e DB_NAME=mydb \
-                                "${LATEST_IMAGE}"
-                            """
-                        }
                     }
                 }
             }
